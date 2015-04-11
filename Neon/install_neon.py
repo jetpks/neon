@@ -75,6 +75,8 @@ def __parse_parted(raw):
     """
     out = list()
     for line in raw.split(';'):
+        if len(line) <= 1:
+            continue
         out.append(line.split(':'))
     return out
 
