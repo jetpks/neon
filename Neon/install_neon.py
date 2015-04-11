@@ -38,13 +38,15 @@ import tempfile
 import dependencies
 from subprocess import call, check_output, CalledProcessError
 #from ask import ask
-from exceptions import NeonInstallFail
+from neon_exceptions import NeonInstallFail
 
 logging.basicConfig(level=logging.DEBUG)
 
-def __call_parted(fail_message, command):
+def __call_parted(fail_message, command, raw=False):
+    """raw=True will return raw unparsed parted output.
+    """
     parted = ['/usr/sbin/parted', '-ms', '--']
-    cmd = []
+    cmd = list()
     raw_output = ''
     if isinstance(command, basestring):
         cmd = shlex.split(command)
@@ -58,21 +60,11 @@ def __call_parted(fail_message, command):
         logging.error("Exit Status: %s" % e.returncode)
         logging.error("Output: %s" % e.output)
         raise NeonInstallFail(fail_message)
-    return raw_output
+    if raw:
+        return raw_output
+    return __parse_parted(raw_output)
 
-
-def extend_fs():
-    logging.info("extending partition")
-    loc = "/dev/"
-    parted = "/usr/sbin/parted -ms -- "
-    root, sep, part = __split_device_part(__find_root_device())
-    if not root:
-        logging.warn("can not find root device; unrecoverable")
-        raise NeonInstallFail("can not find root device; unrecoverable")
-    disk = loc + root
-    partition = loc + root + sep + part
-
-    # Start doing actions on disks
+def __parse_parted(raw):
     """ Sample parted output:
         [root@bed ~]# parted -ms -- /dev/mmcblk0 unit s print
         BYT;
@@ -81,61 +73,69 @@ def extend_fs():
         2:1001472s:1251327s:249856s:linux-swap(v1)::;
         3:1251328s:62333951s:61082624s:ext4::;
     """
-    # Find the starting sector for our root device + sanity checking
-    raw_parted = ''
-    start_sector = -1
-    try:
-        logging.debug('running' + parted + disk + " unit s print")
-        raw_parted = check_output(parted + disk + " unit s print")
-    except(CalledProcessError) as e:
-        logging.error("Problem running: %s" % e.cmd)
-        logging.error("Exit Status: %s" % e.returncode)
-        logging.error("Output: %s" % e.output)
-        raise NeonInstallFail("Unable to get partition data. \
-                Is parted installed?")
+    out = list()
+    for idx, line in enumerate(raw.split(';')):
+        out[idx] = line.split(':')
+    return out
 
-    for line in raw_parted.split(';'):
-        disk_attr = line.split(':')
-        if len(disk_attr) != 7 or disk_attr[0] != part:
-            continue
-        if line[-1][0] != disk_attr[0]:
-            raise NeonInstallFail("root partition must be last partition on \
-                    disk. rootpart: %s, lastpart: %s, partedrootpart: %s" \
-                    % (part, line[-1][0], disk_attr[0]))
-        start_sector = line[2]
-        break
+def __call_resizefs(fail_message, command):
+    resizefs = ['/usr/sbin/resize2fs']
+    cmd = list()
+    raw_output = ''
+    if isinstance(command, basestring):
+        cmd = shlex.split(command)
+    else:
+        cmd = command
 
-    if start_sector == -1:
-        raise NeonInstallFail("could not find any partitions on %s" % disk)
-
-    # Remove the root partition mapping
-    if call(parted + disk + ' rm ' + part) != 0:
-        raise NeonInstallFail("could not remove partition map for part %s" % part)
-
-    # Create new partition map to fill all available space
-    if call(parted + disk + ' mkpart primary ' + start_sector + ' -1s') != 0:
-        logging.crit('''CRITICAL! ROOT PARTITION MAPPING HAS BEEN DELETED
-            FROM MASTER BOOT RECORD, AND WE ARE UNABLE TO CREATE A NEW
-            MAP IN ITS PLACE!''')
-        logging.crit('''ALL DATA WILL BE LOST ON THIS DEVICE UNLESS YOU CAN FIX
-            PARTITION MAPPING IN THE MASTER BOOT RECORD! DUMPING ORIGINAL
-            PARTITION MAP:''')
-        logging.crit(raw_parted)
-        raise NeonInstallFail('''UNABLE TO CREATE NEW ROOT PARTITION.
-            DATA LOSS IMMINENT''')
-
-    # Online extend partition.
     # TODO: XFS
     try:
-        check_output('/usr/sbin/resize2fs ' + partition)
+        check_output(resizefs + cmd)
     except(CalledProcessError) as e:
         logging.error("Problem running: %s" % e.cmd)
         logging.error("Exit Status: %s" % e.returncode)
         logging.error("Output: %s" % e.output)
-        raise NeonInstallFail("unable to extend filesystem")
+        raise NeonInstallFail(fail_message)
 
+def extend_fs():
+    logging.info("extending partition")
+    loc = "/dev/"
+    root, sep, part = __split_device_part(__find_root_device())
+    if not root:
+        logging.warn("can not find root device; unrecoverable")
+        raise NeonInstallFail("can not find root device; unrecoverable")
+    disk = loc + root
+    partition = loc + root + sep + part
+
+    # Start doing actions on disks
+    part_data = __call_parted("Could not print partition data",
+                [disk, 'unit', 's', 'print'])
+
+    if part_data[-1][0] != part:
+        raise NeonInstallFail("root partition must be last partition on \
+                disk. rootpart: %s, lastpart: %s" \
+                % (part, part_data[-1][0]))
+
+    start_sector = part_data[-1][1]
+
+    """ XXX DANGER ZONE XXX
+    We're about to start mangling partition data.
+    https://www.youtube.com/watch?v=siwpn14IE7E
+    """
+    __call_parted("could not delete root partition map.", [disk, 'rm', part])
+
+    # Create new partition map to fill all available space
+    dire_warning = '''CRITICAL DATA LOSS IMMINENT! ROOT PARTITION MAPPING HAS
+        BEEN DELETED FROM MASTER BOOT RECORD, AND WE ARE UNABLE TO CREATE A
+        NEW MAP.
+        ALL DATA WILL BE LOST ON THIS DEVICE UNLESS YOU CAN FIX THE PART MAP.
+        DUMPING ORIGINAL PARTITION MAP:'''
+
+    __call_parted(dire_warning, [disk, 'mkpart', 'primary', start_sector,
+            '-1s'])
+
+    # Online extend partition.
     logging.info('Rebooting for root fs remount')
-    call('/usr/bin/systemctl reboot')
+    call(['/usr/bin/systemctl', 'reboot'])
     sys.exit(0)
 
 
