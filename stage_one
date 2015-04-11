@@ -32,7 +32,5 @@ v0.0.1 - Initial Release
 import logging
 from Neon import install_neon
 
-logging.setLevel(logging.DEBUG)
-
 # Will Reboot system
 install_neon.extend_fs()
