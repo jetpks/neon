@@ -110,7 +110,7 @@ def extend_fs():
     part_data = __call_parted("Could not print partition data",
                 [disk, 'unit', 's', 'print'])
 
-    logging.debug('received part data: ' + part_data)
+    logging.debug('received part data: ' + str(part_data))
     if part_data[-1][0] != part:
         raise NeonInstallFail("root partition must be last partition on \
                 disk. rootpart: %s, lastpart: %s" \
