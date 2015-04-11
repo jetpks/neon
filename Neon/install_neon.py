@@ -48,7 +48,7 @@ def extend_fs():
     root, sep, part = __split_device_part(__find_root_device())
     if not root:
         logging.warn("can not find root device; unrecoverable")
-        raise UserWarning("can not find root device; unrecoverable")
+        raise NeonInstallFail("can not find root device; unrecoverable")
     disk = loc + root
     partition = loc + root + sep + part
 
