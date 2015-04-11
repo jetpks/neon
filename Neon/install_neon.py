@@ -39,6 +39,8 @@ from subprocess import call, check_output, CalledProcessError
 #from ask import ask
 from exceptions import NeonInstallFail
 
+logging.basicConfig(level=logging.DEBUG)
+
 def extend_fs():
     logging.info("extending partition")
     loc = "/dev/"
