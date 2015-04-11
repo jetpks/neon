@@ -141,9 +141,9 @@ def __split_device_part(device):
     part = device[-1]
     # 99% of use cases covered here, but this will break with double digit
     # partitions.
-    if os.path.isfile(pre + device[:-1]):
+    if os.path.lexists(pre + device[:-1]):
         return (device[:-1], '', device[-1])
-    if os.path.isfile(pre + device[:-2]):
+    if os.path.lexists(pre + device[:-2]):
         return (device[:-2], device[-2], device[-1])
 
 def __call_yum(fail_message, *args):
