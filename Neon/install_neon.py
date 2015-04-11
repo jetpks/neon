@@ -63,6 +63,7 @@ def extend_fs():
     raw_parted = ''
     start_sector = -1
     try:
+        logging.debug('running' + parted + disk + " unit s print")
         raw_parted = check_output(parted + disk + " unit s print")
     except(CalledProcessError) as e:
         logging.error("Problem running: %s" % e.cmd)
