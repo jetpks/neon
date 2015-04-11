@@ -138,6 +138,12 @@ def extend_fs():
             '-1s'])
 
     # Online extend partition.
+    __call_resizefs("could not resize fs. Luckily not the end of the world.",
+            [partition])
+
+    # Just for safety, let's flush all of our buffers before reboot
+    call(['/usr/bin/sync'])
+
     logging.info('Rebooting for root fs remount')
     call(['/usr/bin/systemctl', 'reboot'])
     sys.exit(0)
