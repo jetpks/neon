@@ -35,7 +35,7 @@ import string
 import logging
 import tempfile
 import dependencies
-from subprocess import call, check_output
+from subprocess import call, check_output, CalledProcessError
 #from ask import ask
 from exceptions import NeonInstallFail
 
