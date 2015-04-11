@@ -99,7 +99,7 @@ def __call_resizefs(fail_message, command):
 def extend_fs():
     logging.info("extending partition")
     loc = "/dev/"
-    root, sep, part = __split_device_part(__find_root_device())
+    (root, sep, part) = __split_device_part(__find_root_device())
     if not root:
         logging.warn("can not find root device; unrecoverable")
         raise NeonInstallFail("can not find root device; unrecoverable")
@@ -110,6 +110,7 @@ def extend_fs():
     part_data = __call_parted("Could not print partition data",
                 [disk, 'unit', 's', 'print'])
 
+    logging.debug('received part data: ' + part_data)
     if part_data[-1][0] != part:
         raise NeonInstallFail("root partition must be last partition on \
                 disk. rootpart: %s, lastpart: %s" \
