@@ -93,10 +93,10 @@ def extend_fs():
     if call(parted + disk + ' mkpart primary ' + start_sector + ' -1s') != 0:
         logging.crit('''CRITICAL! ROOT PARTITION MAPPING HAS BEEN DELETED
             FROM MASTER BOOT RECORD, AND WE ARE UNABLE TO CREATE A NEW
-            MAP IN ITS PLACE!'''
+            MAP IN ITS PLACE!''')
         logging.crit('''ALL DATA WILL BE LOST ON THIS DEVICE UNLESS YOU CAN FIX
             PARTITION MAPPING IN THE MASTER BOOT RECORD! DUMPING ORIGINAL
-            PARTITION MAP:'''
+            PARTITION MAP:''')
         logging.crit(raw_parted)
         raise NeonInstallFail('''UNABLE TO CREATE NEW ROOT PARTITION.
             DATA LOSS IMMINENT''')
