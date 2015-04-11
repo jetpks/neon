@@ -30,6 +30,7 @@
 import os
 import re
 import sys
+import shlex
 import shutil
 import string
 import logging
@@ -40,6 +41,25 @@ from subprocess import call, check_output, CalledProcessError
 from exceptions import NeonInstallFail
 
 logging.basicConfig(level=logging.DEBUG)
+
+def __call_parted(fail_message, command):
+    parted = ['/usr/sbin/parted', '-ms', '--']
+    cmd = []
+    raw_output = ''
+    if isinstance(command, basestring):
+        cmd = shlex.split(command)
+    else:
+        cmd = command
+    try:
+        logging.debug('running ' + str(parted + cmd))
+        raw_output = check_output(parted + cmd)
+    except(CalledProcessError) as e:
+        logging.error("Problem running: %s" % e.cmd)
+        logging.error("Exit Status: %s" % e.returncode)
+        logging.error("Output: %s" % e.output)
+        raise NeonInstallFail(fail_message)
+    return raw_output
+
 
 def extend_fs():
     logging.info("extending partition")
