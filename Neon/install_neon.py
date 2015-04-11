@@ -75,9 +75,10 @@ def __parse_parted(raw):
     """
     out = list()
     for line in raw.split(';'):
-        if len(line) <= 1:
+        chopped = line.strip().split(':')
+        if len(chopped) <= 1:
             continue
-        out.append(line.split(':'))
+        out.append(chopped)
     return out
 
 def __call_resizefs(fail_message, command):
