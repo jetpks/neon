@@ -74,8 +74,8 @@ def __parse_parted(raw):
         3:1251328s:62333951s:61082624s:ext4::;
     """
     out = list()
-    for idx, line in enumerate(raw.split(';')):
-        out[idx] = line.split(':')
+    for line in raw.split(';'):
+        out.append(line.split(':'))
     return out
 
 def __call_resizefs(fail_message, command):
