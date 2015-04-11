@@ -28,16 +28,39 @@
 """
 
 import os
-import re
-import sys
-import shlex
-import shutil
-import string
 import logging
-import tempfile
-from subprocess import call, check_output, CalledProcessError
-#from ask import ask
+import shlex
 from neon_exceptions import NeonInstallFail
+from subprocess import call, check_output, CalledProcessError
 
 logging.basicConfig(level=logging.DEBUG)
 
+def __call(base, args=[], fail_message='', parser=False):
+    """ parser is a function that will parse the output of whatever command
+    command you're passing via base and args. Leave it false if you just want
+    raw data back.
+    fail_message is what we pass to NeonInstallFail
+    args is an array (or a string if you trust shlex) of args that get passed
+    to base.
+    base is the command/args you want to run. e.g. ['/usr/bin/yum', '-e1', '-y']
+    """
+    # shlex it real good (separarate strings into lists based on shell
+    # semantics) e.g. '-a -b -c' gets turned into ['-a', '-b', '-c']
+    if isinstance(base, basestring):
+        base = shlex.split(base)
+    if isinstance(args, basestring):
+        args = shlex.split(args)
+
+    raw_out = ''
+    logging.debug('running ' + str(base + args))
+    try:
+        raw_out = check_output(base + args)
+    except(CalledProcessError) as e:
+        logging.error("Problem running: %s" % e.cmd)
+        logging.error("Exit Status: %s" % e.returncode)
+        logging.error("Output: %s" % e.output)
+        raise NeonInstallFail(fail_message)
+
+    if parser:
+        return parser(raw_out)
+    return raw_out

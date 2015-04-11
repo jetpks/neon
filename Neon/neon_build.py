@@ -28,16 +28,28 @@
 """
 
 import os
-import re
-import sys
-import shlex
 import shutil
-import string
 import logging
+import shlex
 import tempfile
-from subprocess import call, check_output, CalledProcessError
-#from ask import ask
-from neon_exceptions import NeonInstallFail
+from neon_base import __call
 
 logging.basicConfig(level=logging.DEBUG)
+
+def install_shairport():
+    build_dir = tempfile.mkdtemp()
+    if call('/usr/bin/git clone https://github.com/abrasive/shairport.git ' + build_dir) != 0:
+        # TODO add debug logging
+        raise NeonInstallFailure("Could not find sources for shairport.")
+    os.chdir(build_dir)
+    if call(build_dir + '/configure') != 0:
+        raise NeonInstallFailure("Could not run ./configure for shairport.")
+    if call('/usr/bin/make') != 0:
+        raise NeonInstallFailure("Could not run make for shairport.")
+    if call('/usr/bin/make install') != 0:
+        raise NeonInstallFailure("Could not run make install for shairport.")
+    shutil.copyfile(build_dir + '/scripts/systemd/shairport.service',
+            '/etc/systemd/system/shairport.service')
+    if call('/usr/bin/systemctl enable shairport.service') != 0:
+        logging.warn('could not mark shairport for auto-start on boot')
 

@@ -27,17 +27,35 @@
 
 """
 
-import os
-import re
-import sys
-import shlex
-import shutil
-import string
 import logging
-import tempfile
+import shlex
+import dependencies
 from subprocess import call, check_output, CalledProcessError
-#from ask import ask
-from neon_exceptions import NeonInstallFail
-
 logging.basicConfig(level=logging.DEBUG)
+
+def __call_yum(fail_message, *args):
+    yum = ['/usr/bin/yum', '-e1', '-y']
+    cmd = list()
+    raw_output = ''
+    if isinstance(command, basestring):
+        cmd = shlex.split(command)
+    else:
+        cmd = command
+    try:
+        check_output(yum + cmd)
+    except(CalledProcessError) as e:
+        logging.error("Problem running: %s" % e.cmd)
+        logging.error("Exit Status: %s" % e.returncode)
+        logging.error("Output: %s" % e.output)
+        raise NeonInstallFail(fail_message)
+
+def update_sys():
+    # Pretty much just `yum -y update`
+    __call_yum("Unable to update system. Check your internet connection",
+                'update')
+
+def install_deps():
+    # Pretty much just `yum -y install <dependencies>`
+    __call_yum("Unable to install required packages.", install,
+            dependencies.get_dependencies().join(' '))
 
