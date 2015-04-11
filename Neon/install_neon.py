@@ -123,6 +123,7 @@ def __find_root_device():
     device_id = os.lstat("/").st_dev
     major = os.major(device_id)
     minor = os.minor(device_id)
+    logging.debug("found root device: %s %s" % (major, minor))
     regex = re.compile(string.join((str(major), str(minor), "\d+", "(\w+)"), "\s+"))
     with open("/proc/partitions") as parts:
         for line in parts:
@@ -145,8 +146,12 @@ def __split_device_part(device):
     # 99% of use cases covered here, but this will break with double digit
     # partitions.
     if os.path.lexists(pre + device[:-1]):
+        logging.debug("no part separator. returning: %s %s %s"
+                % (device[:-1], '', device[-1]))
         return (device[:-1], '', device[-1])
     if os.path.lexists(pre + device[:-2]):
+        logging.debug("part separator found. returning: %s %s %s"
+                % (device[:-2], device[-2], device[-1]))
         return (device[:-2], device[-2], device[-1])
 
 def __call_yum(fail_message, *args):
