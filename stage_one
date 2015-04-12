@@ -29,8 +29,5 @@ v0.0.1 - Initial Release
 
 """
 
-import logging
-from Neon import install_neon
-
-# Will Reboot system
-install_neon.extend_fs()
+from Neon import neon_fs_utils
+neon_fs_utils.extend_fs()
