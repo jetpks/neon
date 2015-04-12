@@ -42,7 +42,7 @@ def config_shairport():
     with open('/etc/conf.d/shairport', 'w') as conf:
         # Todo: get name from user
         conf.write('SHAIRPORT_ARGS="--name=Neon \
-                --log=/var/log/shairport.log --pidfile=/var/run/shairport')
+            --log=/var/log/shairport.log --pidfile=/var/run/shairport"')
 
 def config_alsa():
     with open('/usr/share/alsa/alsa.conf', 'rw') as f:
