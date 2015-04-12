@@ -31,6 +31,7 @@ import os
 import shutil
 import logging
 import shlex
+import shutil
 import tempfile
 from neon_base import __call
 
@@ -38,18 +39,18 @@ logging.basicConfig(level=logging.DEBUG)
 
 def install_shairport():
     build_dir = tempfile.mkdtemp()
-    if call('/usr/bin/git clone https://github.com/abrasive/shairport.git ' + build_dir) != 0:
-        # TODO add debug logging
-        raise NeonInstallFailure("Could not find sources for shairport.")
+    fmsg = 'something went wrong in build'
+    __call(['/usr/bin/git'],
+            ['clone', 'http://github.com/abrasive/shairport.git', build_dir],
+            fail_message=fmsg)
+
     os.chdir(build_dir)
-    if call(build_dir + '/configure') != 0:
-        raise NeonInstallFailure("Could not run ./configure for shairport.")
-    if call('/usr/bin/make') != 0:
-        raise NeonInstallFailure("Could not run make for shairport.")
-    if call('/usr/bin/make install') != 0:
-        raise NeonInstallFailure("Could not run make install for shairport.")
+    __call([build_dir + '/configure'], fail_message=fmsg)
+    __call(['/usr/bin/make'], fail_message=fmsg)
+    __call(['/usr/bin/make', 'install'], fail_message=fmsg)
+
     shutil.copyfile(build_dir + '/scripts/systemd/shairport.service',
             '/etc/systemd/system/shairport.service')
-    if call('/usr/bin/systemctl enable shairport.service') != 0:
-        logging.warn('could not mark shairport for auto-start on boot')
 
+    __call(['/usr/bin/systemctl'], ['enable', 'shairport.service'],
+            fail_message=fmsg)
