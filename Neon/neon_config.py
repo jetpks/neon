@@ -28,7 +28,6 @@
 """
 
 import os
-import re
 import logging
 from neon_base import __call
 from neon_exceptions import NeonInstallFail
@@ -46,9 +45,10 @@ def config_shairport():
 
 def config_alsa():
     with open('/usr/share/alsa/alsa.conf', 'r+') as f:
-        config = f.read()
+        config = f.read().replace('pcm.front cards.pcm.front',
+                'pcm.front cards.pcm.default', 1)
         f.seek(0,0)
-        f.write(re.sub(r'^pcm.front cards.pcm.front', 'pcm.front cards.pcm.default', config))
+        f.write(config)
         f.truncate()
 
     __call(['/usr/bin/amixer'], ['cset', 'numid=3', '1'],
