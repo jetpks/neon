@@ -45,10 +45,10 @@ def config_shairport():
             --log=/var/log/shairport.log --pidfile=/var/run/shairport"')
 
 def config_alsa():
-    with open('/usr/share/alsa/alsa.conf', 'rw') as f:
+    with open('/usr/share/alsa/alsa.conf', 'r+') as f:
         config = f.read()
         f.seek(0,0)
-        f.write(re.sub(r'^pcm.front cards.pcm.front$', 'pcm.front cards.pcm.default', config))
+        f.write(re.sub(r'^pcm.front cards.pcm.front', 'pcm.front cards.pcm.default', config))
         f.truncate()
 
     __call(['/usr/bin/amixer'], ['cset', 'numid=3', '1'],
