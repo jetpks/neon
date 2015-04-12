@@ -29,4 +29,15 @@ v0.0.1 - Initial Release
 
 """
 
-from Neon import install_neon
+from Neon import neon_build, neon_config, neon_sys_utils
+
+# Get up to date, and install deps
+neon_sys_utils.update_sys()
+neon_sys_utils.install_deps()
+
+# Build and install shairport
+neon_build.install_shairport()
+
+# Configure shairport and ALSA
+neon_config.config_shairport()
+neon_config.config_alsa()
