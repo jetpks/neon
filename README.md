@@ -3,13 +3,15 @@
 Neon is a software collection and configuration that allows you to use something
 like a Raspberry Pi to act as an AirPlay target.
 
-## Stage One is functional
+## How to use
 
-Stage one just resizes your root partition
+0. Spray a fedora arm minimal image on sd card, and put that in your raspberry pi.
+0. Download this repo.
+0. `./stage_one` # will reboot box
+0. `./stage_two` 
 
-## Stage Two is non-functional
 
-Not even tested yet.
+
 
 ## Dirty Note
 
